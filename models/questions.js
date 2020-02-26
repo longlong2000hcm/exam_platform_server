@@ -15,7 +15,7 @@ const questions = {
     create: async function (data, callback) {
             return knex("questions")
                 .insert([{ 
-                    category: data.category, 
+                    category: data.category.toLowerCase(), 
                     question: data.question,
                     correctAnswerNo: data.correctAnswerNo,
                 }])
