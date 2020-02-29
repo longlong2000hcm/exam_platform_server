@@ -5,6 +5,7 @@ const students = require("../models/students");
 const questions = require("../models/questions");
 const answerOptions = require("../models/answerOptions");
 const exams = require("../models/exams");
+const results = require("../models/results");
 const jwt = require("jsonwebtoken");
 const jwtKey = "teacher";
 
@@ -102,6 +103,39 @@ router.post("/createExam", verifyTeacherRole, async (req,res) => {
             }
         })
     }
+})
+
+router.get("/examResults", verifyTeacherRole, async (req,res)=>{
+    let resultsArray;
+    await results.get({
+        then: rows => {
+            resultsArray = rows;
+            //console.log(resultsArray);
+        },
+        catch: err => {
+            res.status(500).json({ code: 0, err });
+            return null;
+        }
+    })
+    let studentsArray;
+    await students.get({
+        then: rows => {
+            studentsArray = rows;
+            console.log(studentsArray);
+        },
+        catch: err => {
+            res.status(500).json({ code: 0, err });
+            return null;
+        }
+    })
+    for (let i=0;i<resultsArray.length;i++) {
+        for(let k=0;k<studentsArray.length;k++) {
+            if (resultsArray[i].studentId==studentsArray[k].id) {
+                resultsArray[i].studentUsername=studentsArray[k].username;
+            }
+        }
+    }
+    res.status(200).json({ code: 1, resultsArray });
 })
 
 module.exports = router;
