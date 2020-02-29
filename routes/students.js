@@ -5,6 +5,7 @@ const exams = require("../models/exams");
 const questions = require("../models/questions");
 const answerOptions = require("../models/answerOptions");
 const results = require("../models/results");
+const studentAnswers = require("../models/studentAnswers");
 const jwt = require("jsonwebtoken");
 const jwtKey = "student";
 
@@ -141,7 +142,7 @@ router.post("/returnExam", verifyStudentRole, async (req, res) => {
     let answers = req.body.answers;
 
     let resultObject;
-    let studentAnswerObject;
+    let studentAnswerArray = [];
     let score = 0;
 
     let examObject;
@@ -184,15 +185,38 @@ router.post("/returnExam", verifyStudentRole, async (req, res) => {
         date: Date().toString()
     };
 
+
+    let resultId;
     await results.create(resultObject, {
-        then: () => {},
+        then: rows => {resultId = parseInt(...rows)},
+        catch: err => {
+            res.status(500).json({ code: 0, err });
+        }
+    })
+
+    for (let i = 0; i < answers.length; i++) {
+        for (let k = 0; k < questionArray.length; k++) {
+            if (answers[i].questionId == questionArray[k].id) {
+                    studentAnswerArray.push({
+                        resultId: resultId,
+                        questionId: questionArray[k].id,
+                        studentAnswer: answers[i].answerNo,
+                        correctAnswer: questionArray[k].correctAnswerNo
+                    })
+            }
+        }
+    }
+
+    await studentAnswers.create(studentAnswerArray, {
+        then: rows => rows,
         catch: err => {
             res.status(500).json({ code: 0, err });
         }
     })
 
     //console.log(questionArray);
-    console.log(resultObject);
+    //console.log(resultObject);
+    //console.log(studentAnswerArray);
     res.sendStatus(200)
 })
 
