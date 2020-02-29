@@ -1,8 +1,10 @@
 const express = require("express");
 const router = express.Router();
 const teachers = require("../models/teachers");
+const students = require("../models/students");
 const questions = require("../models/questions");
 const answerOptions = require("../models/answerOptions");
+const exams = require("../models/exams");
 const jwt = require("jsonwebtoken");
 const jwtKey = "teacher";
 
@@ -75,5 +77,31 @@ router.post("/addQuestion", verifyTeacherRole, async (req, res) => {
         catch: err => err
     })
 });
+
+router.post("/createExam", verifyTeacherRole, async (req,res) => {
+    let createExamResult;
+    let createExam = await exams.create(req.body, {
+        then: rows => {
+            console.log("examId: ", ...rows)
+            createExamResult = parseInt(...rows);
+            return parseInt(...rows);
+            //res.status(201).json({ code: 1, rows });
+        },
+        catch: err => {
+            res.status(500).json({ code: 0, err });
+        }
+    });
+    console.log("createExamResult: ", createExamResult);
+    if (createExamResult) {
+        let assignExam = await students.assignExam (req.body.target, createExamResult, {
+            then: rows => {
+                res.status(201).json({ code: 1, rows });
+            },
+            catch: err => {
+                res.status(500).json({ code: 0, err });
+            }
+        })
+    }
+})
 
 module.exports = router;
