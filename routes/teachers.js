@@ -6,6 +6,7 @@ const questions = require("../models/questions");
 const answerOptions = require("../models/answerOptions");
 const exams = require("../models/exams");
 const results = require("../models/results");
+const studentAnswers = require("../models/studentAnswers");
 const jwt = require("jsonwebtoken");
 const jwtKey = "teacher";
 
@@ -139,6 +140,7 @@ router.get("/examResults/:resultsId?", verifyTeacherRole, async (req, res) => {
         res.status(200).json({ code: 1, resultsArray });
     }
     else if (req.params.resultsId) {
+
         let singleResult;
         await results.getResultById(req.params.resultsId,{
             then: rows => {
@@ -150,6 +152,7 @@ router.get("/examResults/:resultsId?", verifyTeacherRole, async (req, res) => {
                 return null;
             }
         })
+
         let studentData;
         await students.getStudentById(singleResult[0].studentId,{
             then: rows => {
@@ -162,6 +165,50 @@ router.get("/examResults/:resultsId?", verifyTeacherRole, async (req, res) => {
             }
         })
         singleResult[0].studentUsername=studentData[0].username;
+
+        let studentAnswersData;
+        await studentAnswers.getStudentAnswersByResultsId(singleResult[0].id,{
+            then: rows => {
+                studentAnswersData = rows;
+                //console.log(studentAnswersData);
+            },
+            catch: err => {
+                res.status(500).json({ code: 0, err });
+                return null;
+            }
+        })
+
+        let questionList=[];
+        studentAnswersData.forEach(e => {
+            questionList.push(e.questionId);
+        });
+        let answerOptionsArray;
+        await answerOptions.getAnswerOptionsByQuestionsList(questionList, {
+            then: result => {
+                answerOptionsArray = result;
+                //console.log(result)
+            },
+            catch: err => {
+                res.status(500).json({ code: 0, err });
+            }
+        })
+            .catch(err => res.status(500).json({ code: 0, err }))
+
+        for (let i=0; i< studentAnswersData.length;i++) {
+            for (let k =0; k<answerOptionsArray.length;k++) {
+                if (studentAnswersData[i].questionId==answerOptionsArray[k].questionId) {
+                    if (studentAnswersData[i].studentAnswer==answerOptionsArray[k].answerNo) {
+                        studentAnswersData[i].studentAnswerContent=answerOptionsArray[k].answer;
+                    }
+                    if (studentAnswersData[i].correctAnswer==answerOptionsArray[k].answerNo) {
+                        studentAnswersData[i].correctAnswerContent=answerOptionsArray[k].answer;
+                    }
+                }
+            }
+        }
+
+        singleResult[0].studentAnswers=studentAnswersData;
+
         res.status(200).json({ code: 1, results: singleResult });
     }
 })
