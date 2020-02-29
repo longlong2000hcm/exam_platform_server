@@ -1,9 +1,23 @@
 const express = require("express");
 const router = express.Router();
 const students = require("../models/students");
+const exams = require("../models/exams");
+const questions = require("../models/questions");
+const answerOptions = require("../models/answerOptions");
 const jwt = require("jsonwebtoken");
 const jwtKey = "student";
 
+const verifyStudentRole = (req, res, next) => {
+    jwt.verify(req.token, jwtKey, (err, authorizedData) => {
+        if (err) {
+            //If error send Forbidden (403)
+            res.sendStatus(403);
+            return null;
+        } else {
+            next();
+        }
+    })
+}
 
 router.get('/', (req, res) => {
     students.get({
@@ -40,10 +54,10 @@ router.post("/login", async function (req, res, next) {
 });
 
 router.post("/protected", async function (req, res, next) {
-    console.log("token",req.headers);
+    console.log("token", req.headers);
     //verify the JWT token generated for the user
     jwt.verify(req.token, jwtKey, (err, authorizedData) => {
-        if(err){
+        if (err) {
             //If error send Forbidden (403)
             console.log('ERROR: Could not connect to the protected route');
             res.sendStatus(403);
@@ -58,5 +72,71 @@ router.post("/protected", async function (req, res, next) {
         }
     })
 });
+
+router.post("/getExam", verifyStudentRole, async (req, res) => {
+    let examId = req.body.examId;
+
+    let examObject;
+    await exams.getExamById(examId, {
+        then: result => {
+            examObject = { ...result[0] };
+        },
+        catch: err => {
+            res.status(500).json({ code: 0, err });
+        }
+    })
+        .catch(err => res.status(500).json({ code: 0, err }))
+    //console.log(examObject);
+
+    let questionList = examObject.questionsList.split(",");
+    let questionArray;
+    await questions.getQuestionsByQuestionsList(questionList, {
+        then: result => {
+            questionArray = result;
+            //console.log(result)
+        },
+        catch: err => {
+            res.status(500).json({ code: 0, err });
+        }
+    })
+        .catch(err => res.status(500).json({ code: 0, err }))
+
+    let answerOptionsArray;
+    await answerOptions.getAnswerOptionsByQuestionsList(questionList, {
+        then: result => {
+            answerOptionsArray = result;
+            console.log(result)
+        },
+        catch: err => {
+            res.status(500).json({ code: 0, err });
+        }
+    })
+        .catch(err => res.status(500).json({ code: 0, err }))
+
+    let compleExamObject = {
+        examId: examId,
+        questionList: []
+    };
+
+    questionArray.forEach(x=>compleExamObject.questionList.push({
+        question: x.question,
+        questionId: x.id,
+        answerOptions: []
+    }))
+
+    for (let i=0; i<questionArray.length;i++) {
+        for (let k=0; k<answerOptionsArray.length;k++) {
+            if(questionArray[i].id===answerOptionsArray[k].questionId) {
+                compleExamObject.questionList[i].answerOptions.push(answerOptionsArray[k])
+            }
+        }
+    }
+
+    res.json(compleExamObject);
+})
+
+router.post("/returnExam", verifyStudentRole, async (req, res) => {
+
+})
 
 module.exports = router;

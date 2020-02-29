@@ -12,6 +12,20 @@ const questions = {
                 callback.catch(err);
             });
     },
+
+    getExamById: async (examId, callback) => {
+        return knex
+            .from("exams")
+            .select("*")
+            .where("id", examId)
+            .then(data => {
+                callback.then(data);
+            })
+            .catch(err => {
+                callback.catch(err);
+            });
+    },
+
     create: async function (data, callback) {
         return knex("exams")
             .insert([{

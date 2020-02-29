@@ -12,6 +12,18 @@ const questions = {
                 callback.catch(err);
             });
     },
+    getQuestionsByQuestionsList: async (questionsArray, callback) => {
+        return knex
+            .from("questions")
+            .select("*")
+            .whereIn('id', questionsArray)
+            .then(data => {
+                callback.then(data);
+            })
+            .catch(err => {
+                callback.catch(err);
+            });
+    },
     create: async function (data, callback) {
             return knex("questions")
                 .insert([{ 

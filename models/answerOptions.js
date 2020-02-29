@@ -12,6 +12,20 @@ const answerOptions = {
                 callback.catch(err);
             });
     },
+
+    getAnswerOptionsByQuestionsList: async (questionsArray, callback) => {
+        return knex
+            .from("answerOptions")
+            .select("*")
+            .whereIn('questionId', questionsArray)
+            .then(data => {
+                callback.then(data);
+            })
+            .catch(err => {
+                callback.catch(err);
+            });
+    },
+
     create: async (data,questionId, callback) => {
         let result = [];
         for (let i = 0; i < data.length; i++) {

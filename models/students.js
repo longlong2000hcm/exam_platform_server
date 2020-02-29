@@ -67,6 +67,7 @@ const students = {
       };
     }
   },
+
   assignExam: async (target, examId, callback) => {
     console.log("assignExam(target: ", target, ", examId: ", examId, ")");
     let studentList = await knex
