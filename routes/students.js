@@ -173,7 +173,7 @@ router.post("/returnExam", verifyStudentRole, async (req, res) => {
         for (let k = 0; k < questionArray.length; k++) {
             if (answers[i].questionId == questionArray[k].id
                 && answers[i].answerNo == questionArray[k].correctAnswerNo) {
-                    score ++;
+                score++;
             }
         }
     }
@@ -181,14 +181,14 @@ router.post("/returnExam", verifyStudentRole, async (req, res) => {
     resultObject = {
         examId: examId,
         studentId: studentId,
-        score: score+"/"+questionArray.length,
+        score: score + "/" + questionArray.length,
         date: Date().toString()
     };
 
 
     let resultId;
     await results.create(resultObject, {
-        then: rows => {resultId = parseInt(...rows)},
+        then: rows => { resultId = parseInt(...rows) },
         catch: err => {
             res.status(500).json({ code: 0, err });
         }
@@ -197,12 +197,12 @@ router.post("/returnExam", verifyStudentRole, async (req, res) => {
     for (let i = 0; i < answers.length; i++) {
         for (let k = 0; k < questionArray.length; k++) {
             if (answers[i].questionId == questionArray[k].id) {
-                    studentAnswerArray.push({
-                        resultId: resultId,
-                        questionId: questionArray[k].id,
-                        studentAnswer: answers[i].answerNo,
-                        correctAnswer: questionArray[k].correctAnswerNo
-                    })
+                studentAnswerArray.push({
+                    resultId: resultId,
+                    questionId: questionArray[k].id,
+                    studentAnswer: answers[i].answerNo,
+                    correctAnswer: questionArray[k].correctAnswerNo
+                })
             }
         }
     }
@@ -218,6 +218,41 @@ router.post("/returnExam", verifyStudentRole, async (req, res) => {
     //console.log(resultObject);
     //console.log(studentAnswerArray);
     res.sendStatus(200)
+})
+
+router.post("/pendingExams", verifyStudentRole, async (req, res) => {
+    let studentsPendingExamsArray;
+    await students.getStudentById(req.body.id,{
+        then: rows => {
+            studentsPendingExamsArray = rows[0].pendingExams.split(",");
+        },
+        catch: err => {
+            res.status(500).json({ code: 0, err });
+            return null;
+        }
+    })
+    let examsArray;
+    await exams.get({
+        then: rows => {
+            examsArray = rows;
+        },
+        catch: err => {
+            res.status(500).json({ code: 0, err });
+            return null;
+        }
+    })
+
+    let pendingExams = [];
+    //console.log(studentsArray)
+    //console.log(examsArray)
+    for (let i=0; i < studentsPendingExamsArray.length;i++) {
+        for (let k=0;k<examsArray.length;k++) {
+            if (studentsPendingExamsArray[i]==examsArray[k].id) {
+                pendingExams.push({id: examsArray[k].id, name: examsArray[k].name, numberOfQuestions: examsArray[k].questionsList.split(",").length})
+            }
+        }
+    }
+    res.status(200).json(pendingExams);
 })
 
 module.exports = router;
