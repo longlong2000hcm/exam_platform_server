@@ -80,6 +80,17 @@ router.post("/addQuestion", verifyTeacherRole, async (req, res) => {
     })
 });
 
+router.get("/getQuestions", verifyTeacherRole, async (req,res) => {
+    questions.get({
+        then: rows => {
+            res.status(202).json({ code: 1, rows });
+        },
+        catch: err => {
+            res.status(500).json({ code: 0, err });
+        }
+    })
+})
+
 router.post("/createExam", verifyTeacherRole, async (req, res) => {
     let createExamResult;
     let createExam = await exams.create(req.body, {
