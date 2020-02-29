@@ -28,6 +28,18 @@ const students = {
         callback.catch(err);
       });
   },
+  getStudentById: async (id, callback) => {
+    return knex
+      .from("students")
+      .select("*")
+      .where("id", id)
+      .then(data => {
+        callback.then(data);
+      })
+      .catch(err => {
+        callback.catch(err);
+      });
+  },
   create: function (student, callback) {
     bcrypt.hash(student.password, saltRounds).then(hash => {
       return knex("students")
@@ -75,7 +87,7 @@ const students = {
       .select("*")
       .then(data => data)
       .catch(err => callback(err));
-    if (typeof(target)=="string" && target.toLowerCase() == "all") {
+    if (typeof (target) == "string" && target.toLowerCase() == "all") {
       for (let i = 0; i < studentList.length; i++) {
         let pendingExams = studentList[i].pendingExams.split(",");
         pendingExams.splice(pendingExams.indexOf(""), 1);

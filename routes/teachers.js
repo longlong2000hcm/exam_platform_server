@@ -79,7 +79,7 @@ router.post("/addQuestion", verifyTeacherRole, async (req, res) => {
     })
 });
 
-router.post("/createExam", verifyTeacherRole, async (req,res) => {
+router.post("/createExam", verifyTeacherRole, async (req, res) => {
     let createExamResult;
     let createExam = await exams.create(req.body, {
         then: rows => {
@@ -94,7 +94,7 @@ router.post("/createExam", verifyTeacherRole, async (req,res) => {
     });
     console.log("createExamResult: ", createExamResult);
     if (createExamResult) {
-        let assignExam = await students.assignExam (req.body.target, createExamResult, {
+        let assignExam = await students.assignExam(req.body.target, createExamResult, {
             then: rows => {
                 res.status(201).json({ code: 1, rows });
             },
@@ -105,37 +105,65 @@ router.post("/createExam", verifyTeacherRole, async (req,res) => {
     }
 })
 
-router.get("/examResults", verifyTeacherRole, async (req,res)=>{
-    let resultsArray;
-    await results.get({
-        then: rows => {
-            resultsArray = rows;
-            //console.log(resultsArray);
-        },
-        catch: err => {
-            res.status(500).json({ code: 0, err });
-            return null;
-        }
-    })
-    let studentsArray;
-    await students.get({
-        then: rows => {
-            studentsArray = rows;
-            console.log(studentsArray);
-        },
-        catch: err => {
-            res.status(500).json({ code: 0, err });
-            return null;
-        }
-    })
-    for (let i=0;i<resultsArray.length;i++) {
-        for(let k=0;k<studentsArray.length;k++) {
-            if (resultsArray[i].studentId==studentsArray[k].id) {
-                resultsArray[i].studentUsername=studentsArray[k].username;
+router.get("/examResults/:resultsId?", verifyTeacherRole, async (req, res) => {
+    if (!req.params.resultsId) {
+        let resultsArray;
+        await results.get({
+            then: rows => {
+                resultsArray = rows;
+                //console.log(resultsArray);
+            },
+            catch: err => {
+                res.status(500).json({ code: 0, err });
+                return null;
+            }
+        })
+        let studentsArray;
+        await students.get({
+            then: rows => {
+                studentsArray = rows;
+                //console.log(studentsArray);
+            },
+            catch: err => {
+                res.status(500).json({ code: 0, err });
+                return null;
+            }
+        })
+        for (let i = 0; i < resultsArray.length; i++) {
+            for (let k = 0; k < studentsArray.length; k++) {
+                if (resultsArray[i].studentId == studentsArray[k].id) {
+                    resultsArray[i].studentUsername = studentsArray[k].username;
+                }
             }
         }
+        res.status(200).json({ code: 1, resultsArray });
     }
-    res.status(200).json({ code: 1, resultsArray });
+    else if (req.params.resultsId) {
+        let singleResult;
+        await results.getResultById(req.params.resultsId,{
+            then: rows => {
+                singleResult = rows;
+                //console.log(singleResult);
+            },
+            catch: err => {
+                res.status(500).json({ code: 0, err });
+                return null;
+            }
+        })
+        let studentData;
+        await students.getStudentById(singleResult[0].studentId,{
+            then: rows => {
+                studentData = rows;
+                //console.log(studentData[0]);
+            },
+            catch: err => {
+                res.status(500).json({ code: 0, err });
+                return null;
+            }
+        })
+        singleResult[0].studentUsername=studentData[0].username;
+        res.status(200).json({ code: 1, results: singleResult });
+    }
 })
 
 module.exports = router;
