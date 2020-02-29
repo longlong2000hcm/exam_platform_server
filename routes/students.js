@@ -4,6 +4,7 @@ const students = require("../models/students");
 const exams = require("../models/exams");
 const questions = require("../models/questions");
 const answerOptions = require("../models/answerOptions");
+const results = require("../models/results");
 const jwt = require("jsonwebtoken");
 const jwtKey = "student";
 
@@ -86,7 +87,6 @@ router.post("/getExam", verifyStudentRole, async (req, res) => {
         }
     })
         .catch(err => res.status(500).json({ code: 0, err }))
-    //console.log(examObject);
 
     let questionList = examObject.questionsList.split(",");
     let questionArray;
@@ -118,15 +118,15 @@ router.post("/getExam", verifyStudentRole, async (req, res) => {
         questionList: []
     };
 
-    questionArray.forEach(x=>compleExamObject.questionList.push({
+    questionArray.forEach(x => compleExamObject.questionList.push({
         question: x.question,
         questionId: x.id,
         answerOptions: []
     }))
 
-    for (let i=0; i<questionArray.length;i++) {
-        for (let k=0; k<answerOptionsArray.length;k++) {
-            if(questionArray[i].id===answerOptionsArray[k].questionId) {
+    for (let i = 0; i < questionArray.length; i++) {
+        for (let k = 0; k < answerOptionsArray.length; k++) {
+            if (questionArray[i].id === answerOptionsArray[k].questionId) {
                 compleExamObject.questionList[i].answerOptions.push(answerOptionsArray[k])
             }
         }
@@ -136,7 +136,64 @@ router.post("/getExam", verifyStudentRole, async (req, res) => {
 })
 
 router.post("/returnExam", verifyStudentRole, async (req, res) => {
+    let examId = req.body.examId;
+    let studentId = req.body.studentId;
+    let answers = req.body.answers;
 
+    let resultObject;
+    let studentAnswerObject;
+    let score = 0;
+
+    let examObject;
+    await exams.getExamById(examId, {
+        then: result => {
+            examObject = { ...result[0] };
+        },
+        catch: err => {
+            res.status(500).json({ code: 0, err });
+        }
+    })
+        .catch(err => res.status(500).json({ code: 0, err }))
+
+    let questionList = examObject.questionsList.split(",");
+    let questionArray;
+    await questions.getQuestionsByQuestionsList(questionList, {
+        then: result => {
+            questionArray = result;
+            //console.log(result)
+        },
+        catch: err => {
+            res.status(500).json({ code: 0, err });
+        }
+    })
+        .catch(err => res.status(500).json({ code: 0, err }))
+
+    for (let i = 0; i < answers.length; i++) {
+        for (let k = 0; k < questionArray.length; k++) {
+            if (answers[i].questionId == questionArray[k].id
+                && answers[i].answerNo == questionArray[k].correctAnswerNo) {
+                    score ++;
+            }
+        }
+    }
+
+    resultObject = {
+        examId: examId,
+        studentId: studentId,
+        score: score+"/"+questionArray.length,
+        date: Date().toString()
+    };
+
+    await results.create(resultObject, {
+        then: () => {},
+        catch: err => {
+            res.status(500).json({ code: 0, err });
+        }
+    })
+
+    //console.log(questionArray);
+    console.log(resultObject);
+    res.sendStatus(200)
 })
 
 module.exports = router;
