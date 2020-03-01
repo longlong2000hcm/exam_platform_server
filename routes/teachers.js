@@ -117,6 +117,70 @@ router.post("/createExam", verifyTeacherRole, async (req, res) => {
     }
 })
 
+//CREATE exam with category
+router.post("/createExamWithCategory", verifyTeacherRole, async (req, res) => {
+    let category = req.body.category;
+    let numberOfQuestions = req.body.numberOfQuestions;
+    let questionDataBase;
+
+    await questions.getQuestionsByCategory(category,{
+        then: rows => {
+            questionDataBase = rows;
+            if (rows.length<numberOfQuestions) {
+                res.status(400).json({ code: 0, err: "Number of questions selected is greater than number of questions in the database" });
+                return null
+            }
+        },
+        catch: err => {
+            res.status(500).json({ code: 0, err });
+            return null;
+        }
+    })
+
+    //Get random number function
+    function getRandomInt(max) {
+        return Math.floor(Math.random() * Math.floor(max));
+    }
+
+    let questionList = [];
+    for (let i=0;i<numberOfQuestions;i++) {
+        let randomInt = getRandomInt(questionDataBase.length);
+        questionList.push(questionDataBase[randomInt].id);
+        questionDataBase.splice(randomInt,1);
+    }
+
+    let examObject = {
+        teacherId: req.body.teacherId,
+        name: req.body.name,
+        questionsList: questionList,
+        target: req.body.target
+    }
+
+    let createExamResult;
+    let createExam = await exams.create(examObject, {
+        then: rows => {
+            console.log("examId: ", ...rows)
+            createExamResult = parseInt(...rows);
+            return parseInt(...rows);
+            //res.status(201).json({ code: 1, rows });
+        },
+        catch: err => {
+            res.status(500).json({ code: 0, err });
+        }
+    });
+    console.log("createExamResult: ", createExamResult);
+    if (createExamResult) {
+        let assignExam = await students.assignExam(req.body.target, createExamResult, {
+            then: rows => {
+                res.status(201).json({ code: 1, rows });
+            },
+            catch: err => {
+                res.status(500).json({ code: 0, err });
+            }
+        })
+    }
+})
+
 router.get("/examResults/:resultsId?", verifyTeacherRole, async (req, res) => {
     if (!req.params.resultsId) {
         let resultsArray;

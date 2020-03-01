@@ -25,9 +25,22 @@ const questions = {
             });
     },
 
-    getUniqueCategories :async (callback) => {
+    getQuestionsByCategory: async (category, callback) => {
         return knex
-        .distinct()
+            .from("questions")
+            .select("*")
+            .where('category', category)
+            .then(data => {
+                callback.then(data);
+            })
+            .catch(err => {
+                callback.catch(err);
+            });
+    },
+
+    getUniqueCategories: async (callback) => {
+        return knex
+            .distinct()
             .from("questions")
             .pluck("category")
             .then(data => {
@@ -39,20 +52,20 @@ const questions = {
     },
 
     create: async function (data, callback) {
-            return knex("questions")
-                .insert([{ 
-                    category: data.category.toLowerCase(), 
-                    question: data.question,
-                    correctAnswerNo: data.correctAnswerNo,
-                }])
-                .then(data => {
-                    callback.then(data);
-                })
-                .catch(err => {
-                    callback.catch(err);
-                    console.log(err);
-                });
-        
+        return knex("questions")
+            .insert([{
+                category: data.category.toLowerCase(),
+                question: data.question,
+                correctAnswerNo: data.correctAnswerNo,
+            }])
+            .then(data => {
+                callback.then(data);
+            })
+            .catch(err => {
+                callback.catch(err);
+                console.log(err);
+            });
+
     },
 }
 
