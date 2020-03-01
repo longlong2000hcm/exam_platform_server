@@ -24,6 +24,20 @@ const questions = {
                 callback.catch(err);
             });
     },
+
+    getUniqueCategories :async (callback) => {
+        return knex
+        .distinct()
+            .from("questions")
+            .pluck("category")
+            .then(data => {
+                callback.then(data);
+            })
+            .catch(err => {
+                callback.catch(err);
+            });
+    },
+
     create: async function (data, callback) {
             return knex("questions")
                 .insert([{ 

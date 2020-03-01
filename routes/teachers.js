@@ -222,6 +222,19 @@ router.get("/examResults/:resultsId?", verifyTeacherRole, async (req, res) => {
 
         res.status(200).json({ code: 1, results: singleResult });
     }
+
+    
+})
+
+router.get("/questionCategories", verifyTeacherRole, async (req,res)=>{
+    questions.getUniqueCategories({
+        then: rows => {
+            res.status(202).json({ code: 1, rows });
+        },
+        catch: err => {
+            res.status(500).json({ code: 0, err });
+        }
+    })
 })
 
 module.exports = router;
