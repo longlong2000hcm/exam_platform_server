@@ -28,6 +28,7 @@ router.get('/', (req, res) => {
         },
         catch: err => {
             res.status(500).json({ code: 0, err });
+            return null;
         }
     })
 })
@@ -39,6 +40,7 @@ router.post("/", function (req, res) {
         },
         catch: err => {
             res.status(500).json({ code: 0, err });
+            return null;
         }
     });
 });
@@ -85,6 +87,7 @@ router.post("/getExam", verifyStudentRole, async (req, res) => {
         },
         catch: err => {
             res.status(500).json({ code: 0, err });
+            return null;
         }
     })
         .catch(err => res.status(500).json({ code: 0, err }))
@@ -98,6 +101,7 @@ router.post("/getExam", verifyStudentRole, async (req, res) => {
         },
         catch: err => {
             res.status(500).json({ code: 0, err });
+            return null;
         }
     })
         .catch(err => res.status(500).json({ code: 0, err }))
@@ -110,6 +114,7 @@ router.post("/getExam", verifyStudentRole, async (req, res) => {
         },
         catch: err => {
             res.status(500).json({ code: 0, err });
+            return null;
         }
     })
         .catch(err => res.status(500).json({ code: 0, err }))
@@ -152,6 +157,7 @@ router.post("/returnExam", verifyStudentRole, async (req, res) => {
         },
         catch: err => {
             res.status(500).json({ code: 0, err });
+            return null;
         }
     })
         .catch(err => res.status(500).json({ code: 0, err }))
@@ -165,6 +171,7 @@ router.post("/returnExam", verifyStudentRole, async (req, res) => {
         },
         catch: err => {
             res.status(500).json({ code: 0, err });
+            return null;
         }
     })
         .catch(err => res.status(500).json({ code: 0, err }))
@@ -191,6 +198,7 @@ router.post("/returnExam", verifyStudentRole, async (req, res) => {
         then: rows => { resultId = parseInt(...rows) },
         catch: err => {
             res.status(500).json({ code: 0, err });
+            return null;
         }
     })
 
@@ -211,6 +219,15 @@ router.post("/returnExam", verifyStudentRole, async (req, res) => {
         then: rows => rows,
         catch: err => {
             res.status(500).json({ code: 0, err });
+            return null;
+        }
+    })
+
+    await students.removeExam(studentId,examId, {
+        then: rows=>rows,
+        catch: err => {
+            res.status(500).json({ code: 0, err });
+            return null;
         }
     })
 

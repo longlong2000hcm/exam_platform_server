@@ -122,6 +122,28 @@ const students = {
     else {
       callback.then('Target can only be "all" or a studentId.')
     }
+  },
+
+  removeExam: async (studentId, examId, callback) => {
+    let pendingExams = await knex
+    .from("students")
+    .select("pendingExams")
+    .where("id", studentId);
+    console.log(pendingExams);
+    pendingExams=pendingExams[0].pendingExams.split(",");
+    pendingExams.splice(pendingExams.findIndex(e=>e==examId),1);
+    pendingExams=pendingExams.toString();
+    return knex("students")
+      .where("id", studentId)
+      .update({
+        pendingExams: pendingExams
+      })
+      .then(data => {
+        callback.then(data);
+      })
+      .catch(err => {
+        callback.catch(err);
+      });
   }
 }
 
