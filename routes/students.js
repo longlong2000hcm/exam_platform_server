@@ -223,8 +223,8 @@ router.post("/returnExam", verifyStudentRole, async (req, res) => {
         }
     })
 
-    await students.removeExam(studentId,examId, {
-        then: rows=>rows,
+    await students.removeExam(studentId, examId, {
+        then: rows => rows,
         catch: err => {
             res.status(500).json({ code: 0, err });
             return null;
@@ -234,12 +234,83 @@ router.post("/returnExam", verifyStudentRole, async (req, res) => {
     //console.log(questionArray);
     //console.log(resultObject);
     //console.log(studentAnswerArray);
-    res.sendStatus(200)
+
+    //This part will compare the results and send it back to the student
+    let singleResult;
+    await results.getResultById(resultId, {
+        then: rows => {
+            singleResult = rows;
+            //console.log(singleResult);
+        },
+        catch: err => {
+            res.status(500).json({ code: 0, err });
+            return null;
+        }
+    })
+
+    let studentData;
+    await students.getStudentById(singleResult[0].studentId, {
+        then: rows => {
+            studentData = rows;
+            //console.log(studentData[0]);
+        },
+        catch: err => {
+            res.status(500).json({ code: 0, err });
+            return null;
+        }
+    })
+    singleResult[0].studentUsername = studentData[0].username;
+
+    let studentAnswersData;
+    await studentAnswers.getStudentAnswersByResultsId(singleResult[0].id, {
+        then: rows => {
+            studentAnswersData = rows;
+            //console.log(studentAnswersData);
+        },
+        catch: err => {
+            res.status(500).json({ code: 0, err });
+            return null;
+        }
+    })
+
+    let qList = [];
+    studentAnswersData.forEach(e => {
+        qList.push(e.questionId);
+    });
+    let answerOptionsArray;
+    await answerOptions.getAnswerOptionsByQuestionsList(qList, {
+        then: result => {
+            answerOptionsArray = result;
+            //console.log(result)
+        },
+        catch: err => {
+            res.status(500).json({ code: 0, err });
+        }
+    })
+        .catch(err => res.status(500).json({ code: 0, err }))
+
+    for (let i = 0; i < studentAnswersData.length; i++) {
+        for (let k = 0; k < answerOptionsArray.length; k++) {
+            if (studentAnswersData[i].questionId == answerOptionsArray[k].questionId) {
+                if (studentAnswersData[i].studentAnswer == answerOptionsArray[k].answerNo) {
+                    studentAnswersData[i].studentAnswerContent = answerOptionsArray[k].answer;
+                }
+                if (studentAnswersData[i].correctAnswer == answerOptionsArray[k].answerNo) {
+                    studentAnswersData[i].correctAnswerContent = answerOptionsArray[k].answer;
+                }
+            }
+        }
+    }
+
+    singleResult[0].studentAnswers = studentAnswersData;
+
+    res.status(200).json({ code: 1, results: singleResult });
+    //res.sendStatus(200)
 })
 
 router.post("/pendingExams", verifyStudentRole, async (req, res) => {
     let studentsPendingExamsArray;
-    await students.getStudentById(req.body.id,{
+    await students.getStudentById(req.body.id, {
         then: rows => {
             studentsPendingExamsArray = rows[0].pendingExams.split(",");
         },
@@ -262,10 +333,10 @@ router.post("/pendingExams", verifyStudentRole, async (req, res) => {
     let pendingExams = [];
     //console.log(studentsArray)
     //console.log(examsArray)
-    for (let i=0; i < studentsPendingExamsArray.length;i++) {
-        for (let k=0;k<examsArray.length;k++) {
-            if (studentsPendingExamsArray[i]==examsArray[k].id) {
-                pendingExams.push({id: examsArray[k].id, name: examsArray[k].name, numberOfQuestions: examsArray[k].questionsList.split(",").length})
+    for (let i = 0; i < studentsPendingExamsArray.length; i++) {
+        for (let k = 0; k < examsArray.length; k++) {
+            if (studentsPendingExamsArray[i] == examsArray[k].id) {
+                pendingExams.push({ id: examsArray[k].id, name: examsArray[k].name, numberOfQuestions: examsArray[k].questionsList.split(",").length })
             }
         }
     }
