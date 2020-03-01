@@ -120,7 +120,7 @@ const students = {
       callback.then("Finished assigning exam " + examId + " to student " + target + ".");
     }
     else {
-      callback.then('Target can only be "all" or a studentId.')
+      callback.catch('Target can only be "all" or a studentId.')
     }
   },
 
