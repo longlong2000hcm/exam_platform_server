@@ -343,4 +343,16 @@ router.post("/pendingExams", verifyStudentRole, async (req, res) => {
     res.status(200).json(pendingExams);
 })
 
+router.post("/getCompletedResults", verifyStudentRole, async (req,res)=>{
+    await results.getResultByStudentId(req.body.id,{
+        then: rows => {
+            res.status(200).json({ code: 1, rows });
+        },
+        catch: err => {
+            res.status(500).json({ code: 0, err });
+            return null;
+        }
+    })
+})
+
 module.exports = router;
