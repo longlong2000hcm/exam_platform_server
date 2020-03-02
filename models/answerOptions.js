@@ -3,7 +3,7 @@ const knex = require("../db/knexConfiguration");
 const answerOptions = {
     get: async function (callback) {
         return knex
-            .from("answerOptions")
+            .from("answeroptions")
             .select("*")
             .then(data => {
                 callback.then(data);
@@ -15,7 +15,7 @@ const answerOptions = {
 
     getAnswerOptionsByQuestionsList: async (questionsArray, callback) => {
         return knex
-            .from("answerOptions")
+            .from("answeroptions")
             .select("*")
             .whereIn('questionId', questionsArray)
             .then(data => {
@@ -29,7 +29,7 @@ const answerOptions = {
     create: async (data,questionId, callback) => {
         let result = [];
         for (let i = 0; i < data.length; i++) {
-            await knex("answerOptions")
+            await knex("answeroptions")
                 .insert([{
                     questionId: questionId,
                     answerNo: data[i].answerNo,

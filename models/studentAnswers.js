@@ -3,7 +3,7 @@ const knex = require("../db/knexConfiguration");
 const studentAnswers = {
     get: async function (callback) {
         return knex
-            .from("studentAnswers")
+            .from("studentanswers")
             .select("*")
             .then(data => {
                 callback.then(data);
@@ -14,7 +14,7 @@ const studentAnswers = {
     },
     getStudentAnswersByResultsId: async (resultId, callback) => {
         return knex
-            .from("studentAnswers")
+            .from("studentanswers")
             .select("*")
             .where("resultId", resultId)
             .then(data => {
@@ -27,7 +27,7 @@ const studentAnswers = {
 
     create: async function (data, callback) {
         for (let i = 0; i < data.length; i++) {
-            await knex("studentAnswers")
+            await knex("studentanswers")
             .insert(data[i])
             .then(data => data)
             .catch(err => {
