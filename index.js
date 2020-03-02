@@ -4,7 +4,10 @@ const cors = require("cors");
 const bearerToken = require('express-bearer-token');
 
 const app = express();
-const port = 4000;
+let port = process.env.PORT;
+if (port == null || port == "") {
+  port = 4000;
+}
 
 app.use(cors());
 app.use(bearerToken());
@@ -19,5 +22,5 @@ app.use('/students', studentsRoute);
 app.use('/teachers', teachersRoute);
 
 app.listen(port, () => {
-    console.log(`API listening on http://localhost:${port}\n`);
+    console.log(`API listening on PORT ${port}\n`);
 })
