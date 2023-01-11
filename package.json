@@ -25,7 +25,7 @@
     "express-bearer-token": "^2.4.0",
     "express-jwt": "^5.3.1",
     "jsonwebtoken": "^8.5.1",
-    "knex": "^0.20.10",
+    "knex": "^2.4.0",
     "mysql": "^2.18.1",
     "mysql2": "^2.1.0",
     "nodemon": "^2.0.2"
